@@ -1,0 +1,166 @@
+
+clear all
+close all
+clc
+
+restoredefaultpath
+addpath('D:\FLOR\iEEG_toolbox\')
+addpath('C:\Toolbox\eeglab11_0_4_3b\')
+
+
+%%
+eeglab
+
+path_file=['D:\FLOR\Pacientes\Paciente13_RM\Masters\5Chords\'];
+   
+path=[path_file '5ChordsRamiroMilliaII.edf' ];
+channel=8;  
+
+EEG=import_edf(path,channel);
+
+eeglab redraw
+  
+% ev2delete=[1:6];
+%  
+% EEG=delete_mark(EEG,ev2delete)
+
+eeglab redraw
+
+%% Leo los tiempos de las marcas del fotodiodo
+
+micromed_time=make_photodiodevector(EEG);
+% 
+% micromed_time(1:164)=[];
+
+micromed_time=micromed_time-micromed_time(1,1);
+%micromed_time=micromed_time(1,26:end);
+% micromed_time=micromed_time(1,5:end);
+
+%% Primera prueba
+
+path=['D:\FLOR\Pacientes\Paciente13_RM\Logs Millia Ramiro\5 chords\'];
+time_file=[path 'Milia2Ramiro_log.mat'];
+load (time_file);
+
+stimuli_time1=[425420.276080590;425432.525437428;425443.725929293;425451.141833202;425459.410332683;425467.731362821;425476.029952396;425483.862155775;425491.699561760;425499.531719810;425507.364716453;425515.186926435;425523.019134946;425530.851476880;425538.688706251;425546.521009269;425554.357811434;425562.190971860;425570.023175240;425577.861474981;425584.493783473;425592.325636620;425600.158850928;425607.996049082;425615.828029664;425623.665211568;425631.499072460;425639.330302971;425647.167524645;425655.000812934;425662.836986047;425670.669600384;425678.501790507;425686.339116524;425694.171779611;425705.839558698;];
+response_time1=[425429.499794735;425440.691179263;425448.124596954;425456.377619049;425464.697914511;425473.010424453;425480.833993031;425488.668344848;425496.502588473;425504.336708940;425512.153971188;425519.988586428;425527.822829625;425535.657056145;425543.491095789;425551.325563067;425559.159788731;425566.993827092;425574.828276837;425581.462210342;425589.296329098;425597.130745060;425604.964890756;425612.799186553;425620.633449422;425628.467664396;425636.301714730;425644.136074244;425651.970235336;425659.804546528;425667.638748672;425675.473012824;425683.307098652;425691.141543693;425702.818072188;425711.027410962;];
+
+diff_time=response_time1-stimuli_time1;
+
+stimuli_time(2)=micromed_time(1)-diff_time(2);
+response_time(2)=micromed_time(1);
+
+response_time(1)=stimuli_time(2)-3.0256;
+stimuli_time(1)=response_time(1)-diff_time(1);
+
+for n=2:5
+    stimuli_time(n+1)=micromed_time(2*(n-1));
+    response_time(n+1)= micromed_time(2*(n-1))+diff_time(n+1);
+end
+
+for n=7:34
+    
+    stimuli_time(n)=micromed_time(3+n);
+    response_time(n)=1000;
+end
+
+stimuli_time(35)=micromed_time(38);
+response_time(35)=micromed_time(40);
+
+stimuli_time(36)=micromed_time(41);
+response_time(36)=micromed_time(42);
+
+%%
+
+marks_file=[path 'Milia2Ramiro_log.mat'];
+
+load (marks_file);
+stimuli_marks=log.Stimuli(1,:);
+response_marks1=log.Trials(:,3);
+
+response_marks=response_marks1';
+
+%%
+
+plot([micromed_time;micromed_time],[-100;0],'r')
+hold on   
+
+plot([stimuli_time;stimuli_time],[0;100],'b')
+
+hold on
+plot([response_time;response_time],[0;100],'g') 
+
+%% Agrego las respuestas
+
+%EEG = pop_editeventvals(EEG,'insert',{1 [] [] []},'changefield',{1 'latency'  EEG.event(1).latency/EEG.srate-diff_time(2)},'changefield',{1 'type' 'chan8'});
+
+EEG = pop_editeventvals(EEG,'insert',{1 [] [] []},'changefield',{1 'latency'  EEG.event(1).latency/EEG.srate-3.0256},'changefield',{1 'type' 'chan8'});
+
+EEG = pop_editeventvals(EEG,'insert',{1 [] [] []},'changefield',{1 'latency'  EEG.event(1).latency/EEG.srate-diff_time(1)},'changefield',{1 'type' 'chan8'});
+
+ %%
+for i=1:max(size(stimuli_time))
+   
+        rest=micromed_time-stimuli_time(i); 
+        mmark=find(abs(rest)<0.05);
+        
+        if ~isempty(mmark) & ~isempty(stimuli_marks{i})
+    
+         
+                EEG = pop_editeventvals(EEG,'changefield',{mmark 'type' stimuli_marks{i}});
+         
+                        
+        end
+        
+end
+
+for j=1:max(size(response_time))
+   
+        rest=micromed_time-response_time(j); 
+        mmark=find(abs(rest)<0.1);
+        
+        if ~isempty(mmark) & ~isempty(response_marks(j))
+    
+                EEG = pop_editeventvals(EEG,'changefield',{mmark 'type' response_marks(j)});
+         
+                        
+        end
+        
+end
+
+%%
+
+% %% Elimino las marcas que están de más
+
+p=1;
+
+while p<size(EEG.event,2)
+   
+    if strcmp(EEG.event(p).type,'chan8') == 1
+        
+        EEG=delete_mark(EEG,p);
+        
+    else
+        
+        p=p+1;
+        
+    end
+    
+end
+
+
+%%
+
+clear micromed_time
+figure
+micromed_time=make_photodiodevector(EEG);
+micromed_time=micromed_time-micromed_time(1,1);
+
+plot([micromed_time;micromed_time],[-100;0],'r')
+hold on   
+
+plot([stimuli_time;stimuli_time],[0;100],'b')
+hold on   
+ 
+plot([response_time;response_time],[0;100],'g')
+hold on   

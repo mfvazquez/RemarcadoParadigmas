@@ -1,0 +1,51 @@
+% EEGLAB history file generated on the 23-Feb-2015
+% ------------------------------------------------
+
+
+eeglab
+EEG = pop_loadset('filename','Paciente10_intero_con_eeg_full.set','filepath','D:\\_INECO\\Pacientes\\Paciente10_Repossini\\ConMarcas\\');
+EEG = eeg_checkset( EEG );
+
+
+EEG = pop_editeventvals(EEG,'changefield',{470 'type' 'inb5'});
+EEG = pop_editeventvals(EEG,'changefield',{526 'type' 'finb5'});
+
+EEG = pop_editeventvals(EEG,'changefield',{527 'type' 'inb6'});
+EEG = pop_editeventvals(EEG,'changefield',{643 'type' 'finb6'});
+
+EEG = pop_editeventvals(EEG,'changefield',{644 'type' 'inb7'});
+EEG = pop_editeventvals(EEG,'changefield',{781 'type' 'finb7'});
+
+
+
+bloque(1).ini=6;
+bloque(1).fin=136;
+
+
+bloque(1).ini=137
+bloque(1).fin=255
+
+
+bloque(1).ini=256;
+bloque(1).fin=364;
+
+
+bloque(1).ini=366;
+bloque(1).fin=469;
+
+
+bloque(1).ini=470
+bloque(1).fin=
+
+
+bloque(1).ini=
+bloque(1).fin=
+
+
+bloque(1).ini=
+bloque(1).fin=
+for i=1:7
+
+EEG = pop_select( EEG,'time',[567.5371 696.6631] );
+EEG.setname='Bloque1';
+EEG = eeg_checkset( EEG );
